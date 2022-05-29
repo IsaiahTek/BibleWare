@@ -16,7 +16,9 @@ class Search extends React.Component{
         );
     }
     updateSearchText(ev) {
-        this.props.updateSearchKey(ev.target.value)
+        this.setState({searchText:ev.target.value})
+        let newValue = this.state.searchText
+        this.props.updateSearchKey(newValue)
     }
 }
 export default Search

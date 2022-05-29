@@ -43,7 +43,7 @@ export default class BiblePan extends React.Component{
             book:Object,
             chapter:Number,
             verse:Number,
-            searchKey:String
+            searchKey:""
         }
         this.handleSelectBook = this.handleSelectBook.bind(this)
         this.handleSelectChapter = this.handleSelectChapter.bind(this)
@@ -68,8 +68,7 @@ export default class BiblePan extends React.Component{
         return this.state.searchKey
     }
     handleUpdateSearchKey(key){
-        let thisKey = this.getSearchKey()
-        this.setState({searchKey:thisKey+key})
+        this.setState({searchKey:key})
     }
 
     getAllBooksNames(){
@@ -150,7 +149,7 @@ export default class BiblePan extends React.Component{
                 // 
             }
         }
-        let searchText = <span>{this.state.searchKey}</span>
+        let searchText = <span>{this.getSearchKey()}</span>
         return(
             <div className={this.props.className} id={this.props.id}>
                 <div className="controls-container">
