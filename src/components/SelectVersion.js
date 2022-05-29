@@ -1,7 +1,12 @@
 import React from "react"
+
+function OptionGroups(props){
+    return props.multiLanguageVersions.map(({language,versions})=> <optgroup key={language} label={language}><Options options={versions}></Options></optgroup>)
+}
+
 function Options(props){
-    return props.options.map((option, id)=>{
-        return <option key={option.abbrev} value={option.abbrev}>{option.name}</option>
+    return props.options.map(option=>{
+        return <option key={option.abbreviation} value={option.abbreviation}>{option.name}</option>
     })
 }
 export default class SelectVersion extends React.Component{
@@ -16,13 +21,18 @@ export default class SelectVersion extends React.Component{
             <select value={this.props.versions} onChange={this.handleSelect}>
                 <option hidden >Select Version</option>
                 <option disabled >Select Version</option>
-                <Options options={this.props.items}/>
+                <OptionGroups multiLanguageVersions={this.props.multiLanguageVersions}/>
             </select>
         )
     }
     
     handleSelect(event){
-        let bookObj = this.props.items.find(({abbrev})=>abbrev === event.target.value)
+        let bookObj = null
+        this.props.multiLanguageVersions.forEach(({versions}) => {
+            versions.forEach((obj)=>{
+                if(obj.abbreviation === event.target.value) bookObj = obj
+            })
+        });
         this.props.handleSelect({name:bookObj.name, value:event.target.value})
     }
 }

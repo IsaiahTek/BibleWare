@@ -6,7 +6,7 @@
 .pnp.js
 
 # Bibles
-/src/bible_versions
+*/bible_versions
 
 # testing
 /coverage
