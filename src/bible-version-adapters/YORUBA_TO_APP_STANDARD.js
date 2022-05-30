@@ -1,6 +1,6 @@
-import BIBLE_YORUBA from "../bible_versions/yoruba-bible.json"
+// import BIBLE_YORUBA from "../bible_versions/yoruba-bible.json"
 
-function bibleYorubaToStandard(){
+function bibleYorubaToStandard(BIBLE_YORUBA){
     let books = []
     let chapters = []
     let verses = []
@@ -36,5 +36,5 @@ function bibleYorubaToStandard(){
     }
     return books
 }
-let  NG_YORUBA = bibleYorubaToStandard()
+let  NG_YORUBA = bibleYorubaToStandard
 export default NG_YORUBA

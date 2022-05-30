@@ -1,25 +1,6 @@
-// import EN_KJV from "../bible_versions/bible-master/json/en_kjv.json";
-// import EN_BBE from "../bible_versions/bible-master/json/en_bbe.json";
-// import EN_ESV from "../bible-version-adapters/ESV_TO_APP_STANDARD";
-// import EN_ASV from "../bible-version-adapters/ASV_TO_APP_STANDARD";
-// import NG_YORUBA from "../bible-version-adapters/YORUBA_TO_APP_STANDARD";
-// import AR_SVD from "../bible_versions/bible-master/json/ar_svd.json";
-// import ZH_CUV from "../bible_versions/bible-master/json/zh_cuv.json";
-// import ZH_NCV from "../bible_versions/bible-master/json/zh_ncv.json";
-// import DE_SCHLACHTER from "../bible_versions/bible-master/json/de_schlachter.json";
-// import EL_GREEK from "../bible_versions/bible-master/json/el_greek.json";
-// import EO_ESPERANTO from "../bible_versions/bible-master/json/eo_esperanto.json";
-// import ES_RVR from "../bible_versions/bible-master/json/es_rvr.json";
-// import FI_FINNISH from "../bible_versions/bible-master/json/fi_finnish.json";
-// import FI_PR from "../bible_versions/bible-master/json/fi_pr.json";
-// import FR_APEE from "../bible_versions/bible-master/json/fr_apee.json";
-// import KO_KO from "../bible_versions/bible-master/json/ko_ko.json";
-// import PT_AA from "../bible_versions/bible-master/json/pt_aa.json";
-// import PT_ACF from "../bible_versions/bible-master/json/pt_acf.json";
-// import PT_NVI from "../bible_versions/bible-master/json/pt_nvi.json";
-// import RO_CORNILESCU from "../bible_versions/bible-master/json/ro_cornilescu.json";
-// import RU_SYNODAL from "../bible_versions/bible-master/json/ru_synodal.json";
-// import VI_VIETNAMESE from "../bible_versions/bible-master/json/vi_vietnamese.json";
+import EN_ESV from "../bible-version-adapters/ESV_TO_APP_STANDARD";
+import EN_ASV from "../bible-version-adapters/ASV_TO_APP_STANDARD";
+import NG_YORUBA from "../bible-version-adapters/YORUBA_TO_APP_STANDARD";
 import BibleIndex from "../bible_versions/bible-master/json/index.json";
 import SelectBook from "./SelectBook";
 import SelectVersion from "./SelectVersion";
@@ -41,6 +22,9 @@ export default class BiblePan extends React.Component{
             hasLoadedBible: false
         }
 
+        this.bibleUsesAdapter = ['asv', 'bible_esv', 'yoruba-bible']
+        this.adapterOfBible = {"asv":EN_ASV, "bible_esv":EN_ESV, "yoruba-bible":NG_YORUBA}
+
         this.handleSelectBook = this.handleSelectBook.bind(this)
         this.handleSelectChapter = this.handleSelectChapter.bind(this)
         this.handleSelectVerse = this.handleSelectVerse.bind(this)
@@ -58,19 +42,25 @@ export default class BiblePan extends React.Component{
     }
     handleSelectVersion(selected){
         this.setState({version:selected})
-        this.setBibleFile()
+        this.fetchAndCommitBibleFile()
     }
 
-    setBibleFile(){
+    fetchAndCommitBibleFile(){
         this.setState({hasLoadedBible : false})
         const dp = new Promise((resolve, reject)=>{
             resolve(this.state.version.value)
         })
         dp.then(()=>{
-            fetch(`http://localhost:3000/bible_versions/bible-master/json/${this.state.version.value}.json`).then((response)=>{
+                
+            let baseUrl = (this.bibleUsesAdapter.includes(this.state.version.value))?"http://localhost:3000/bible_versions/":"http://localhost:3000/bible_versions/bible-master/json/"
+            fetch(`${baseUrl+this.state.version.value}.json`).then((response)=>{
                 return response.json()
             }).then((data)=>{
-                this.setState({bibleFile : data})
+                if(this.bibleUsesAdapter.includes(this.state.version.value)){
+                    this.setState({bibleFile:this.adapterOfBible[this.state.version.value](data)})
+                }else{
+                    this.setState({bibleFile : data})
+                }
             }).then(()=>{
                 this.setState({hasLoadedBible : true})
             })
@@ -107,7 +97,6 @@ export default class BiblePan extends React.Component{
         
         if(typeof this.state.version.value != "undefined" && this.state.hasLoadedBible){
             // const BIBLE = Object.values(this.getBible(this.state.version.value))[0]
-            console.log(this.state.bibleFile, this.state.hasLoadedBible)
             books = this.state.bibleFile.map((book, id)=>{
                 return book
             })

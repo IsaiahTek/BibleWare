@@ -1,5 +1,5 @@
-import BIBLE_ESV from "../bible_versions/bible_esv.json"
-function bibleEsvToStandard(){
+// import BIBLE_ESV from "../bible_versions/bible_esv.json"
+function bibleEsvToStandard(BIBLE_ESV){
     let Bible = BIBLE_ESV["XMLBIBLE"]["BIBLEBOOK"].map((book)=>{
         return {
             "chapters":book.CHAPTER.map((VERSES)=>
@@ -12,5 +12,5 @@ function bibleEsvToStandard(){
     return Bible
 }
 
-let EN_ESV = bibleEsvToStandard()
+let EN_ESV = bibleEsvToStandard
 export default EN_ESV

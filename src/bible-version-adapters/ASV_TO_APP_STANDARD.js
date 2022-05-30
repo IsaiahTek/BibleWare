@@ -1,6 +1,6 @@
-import BIBLE_ASV from "../bible_versions/asv.json"
+// import BIBLE_ASV from "../bible_versions/asv.json"
 
-function customSort(){
+function customSort(BIBLE_ASV){
     let previousVerse = 0
     let previousChapter = 0
     let previousBook = ""
@@ -59,11 +59,11 @@ function customSort(){
     return books
 }
     
-function bibleAsvToStandard(){
-    let finalBook = customSort()
+function bibleAsvToStandard(bibleJSON_File){
+    let finalBook = customSort(bibleJSON_File)
     return finalBook
 }
-const EN_ASV = bibleAsvToStandard()
+const EN_ASV = bibleAsvToStandard
 export default EN_ASV
 
 
