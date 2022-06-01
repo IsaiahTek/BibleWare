@@ -19,20 +19,20 @@ export default class SelectVersion extends React.Component{
     render(){
         return(
             <select value={this.props.versions} onChange={this.handleSelect}>
-                <option hidden >Select Version</option>
-                <option disabled >Select Version</option>
+                <option hidden >Select Language</option>
+                <option disabled >Select Language</option>
                 <OptionGroups multiLanguageVersions={this.props.multiLanguageVersions}/>
             </select>
         )
     }
     
     handleSelect(event){
-        let bookObj = null
+        let versionObj = null
         this.props.multiLanguageVersions.forEach(({versions}) => {
             versions.forEach((obj)=>{
-                if(obj.abbreviation === event.target.value) bookObj = obj
+                if(obj.abbreviation === event.target.value) versionObj = obj
             })
         });
-        this.props.handleSelect({name:bookObj.name, value:event.target.value})
+        this.props.handleSelect({name:versionObj.name, abbreviation:event.target.value})
     }
 }

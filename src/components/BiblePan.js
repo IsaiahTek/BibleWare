@@ -9,6 +9,15 @@ import Search from "./Search";
 import BookSelected from "../components/BookSelected"
 import React from "react";
 
+function SingleDangerousResult(props){
+    return {__html:`<div class="verse"><small><em>${props.dataItem.address[1].name+" ch "+parseInt(props.dataItem.address[2]+1)+" : " +parseInt(props.dataItem.address[3]+1)}</em></small><p>${props.dataItem.text}</p></div>`}
+}
+function DangerousResults(props){
+    return props.listsData.map(data=>{
+        let bibleObj = {openPanAddress:true, address:[data.address]}
+        return (<div onClick={()=>props.openBookByAddress(bibleObj)} dangerouslySetInnerHTML={SingleDangerousResult({dataItem:data})}  key={data.address[1].name+data.address[2]+data.address[3]} />)
+    })
+}
 export default class BiblePan extends React.Component{
     constructor(props){
         super(props)
@@ -18,9 +27,10 @@ export default class BiblePan extends React.Component{
             chapter:Number,
             verse:Number,
             searchKey:"",
-            bibleFile : null,
+            bibleFile : [],
             hasLoadedBible: false
         }
+        this.searchResult = []
 
         this.bibleUsesAdapter = ['asv', 'bible_esv', 'yoruba-bible']
         this.adapterOfBible = {"asv":EN_ASV, "bible_esv":EN_ESV, "yoruba-bible":NG_YORUBA}
@@ -30,6 +40,8 @@ export default class BiblePan extends React.Component{
         this.handleSelectVerse = this.handleSelectVerse.bind(this)
         this.handleSelectVersion = this.handleSelectVersion.bind(this)
         this.handleUpdateSearchKey = this.handleUpdateSearchKey.bind(this)
+        this.openBookByAddress = this.openBookByAddress.bind(this)
+
     }
     handleSelectBook(selected){
         this.setState({book:selected})
@@ -45,27 +57,37 @@ export default class BiblePan extends React.Component{
         this.fetchAndCommitBibleFile()
     }
 
+    openBookByAddress(bible){
+        this.props.openBookByAddress(bible)
+    }
+
     fetchAndCommitBibleFile(){
         this.setState({hasLoadedBible : false})
         const dp = new Promise((resolve, reject)=>{
-            resolve(this.state.version.value)
+            resolve(this.state.version.abbreviation)
         })
         dp.then(()=>{
-                
-            let baseUrl = (this.bibleUsesAdapter.includes(this.state.version.value))?"http://localhost:3000/bible_versions/":"http://localhost:3000/bible_versions/bible-master/json/"
-            fetch(`${baseUrl+this.state.version.value}.json`).then((response)=>{
+            let baseUrl = (this.bibleUsesAdapter.includes(this.state.version.abbreviation))?"http://localhost:3000/bible_versions/":"http://localhost:3000/bible_versions/bible-master/json/"
+            fetch(`${baseUrl+this.state.version.abbreviation}.json`).then((response)=>{
                 return response.json()
             }).then((data)=>{
-                if(this.bibleUsesAdapter.includes(this.state.version.value)){
-                    this.setState({bibleFile:this.adapterOfBible[this.state.version.value](data)})
+                if(this.bibleUsesAdapter.includes(this.state.version.abbreviation)){
+                    this.setState({bibleFile:this.adapterOfBible[this.state.version.abbreviation](data)})
                 }else{
                     this.setState({bibleFile : data})
                 }
             }).then(()=>{
                 this.setState({hasLoadedBible : true})
             })
-
         })
+    }
+
+    componentDidMount(){
+        if(this.props.bibleAddress){
+            this.setState({version:this.props.bibleAddress.versionObj})
+            this.setState({book:this.props.bibleAddress.bookObj})
+            this.setState({chapter:this.props.bibleAddress.chapter})
+        }
     }
     
     getSearchKey(){
@@ -73,18 +95,62 @@ export default class BiblePan extends React.Component{
     }
     handleUpdateSearchKey(key){
         this.setState({searchKey:key})
+        let keyUpdatePromise = new Promise((resolve, reject)=>{
+            resolve(this.state.searchKey === key)
+        })
+        let prm = new Promise((resolve, reject)=>{
+            resolve(this.state.bibleFile)
+        })
+        prm.then(()=>{
+            keyUpdatePromise.then(()=>{
+                this.searchBibleAndCommitResult(key)
+            })
+        })
     }
-
-    // getAllBooksMap(){
-    //     console.log(this.state.bibleFiles)
-    //     return this.state.bibleFiles
-    // }
-    // getBible(version_id){
-    //     return this.getAllBooksMap().find((elem)=>{
-    //         return Object.keys(elem)[0] === version_id
+    // componentDidUpdate(){
+    //     let prm = new Promise((resolve, reject)=>{
+    //         resolve(this.state.bibleFile)
+    //     })
+    //     prm.then(()=>{
+    //         return this.state.searchKey
+    //     }).then(()=>{
+    //         this.searchBibleAndCommitResult()
     //     })
     // }
-    
+    searchBibleAndCommitResult(key){
+        this.searchResult = []
+        let unsearchedKeys = ["is", "us", "as", "of", "the", "but", "by", "at", "to", "that", "be", "he", "and", "she", "to", "this"]
+        let keyFragments = key.split(" ")
+        let keyRegPattern = ""
+        keyFragments.forEach((key, id)=>{
+            if(keyFragments.length > 1){
+                if(id === 0) {
+                    keyRegPattern += "("+ key
+                }else if(id < keyFragments.length-1) {
+                    keyRegPattern +=  ")\|("+key
+                }else if(id === keyFragments.length-1){
+                    keyRegPattern = keyRegPattern+")"
+                }
+            }else{
+                keyRegPattern = +key
+            }
+        })
+        if(key.length > 4 && !unsearchedKeys.includes(key)){
+            this.state.bibleFile.forEach((book, b_id)=>{
+                book.chapters.forEach((chapter, c_id)=>{
+                    chapter.forEach((verse, v_id)=>{
+                        if(new RegExp(key, "gi").test(verse)){
+                            let  newText = verse.replaceAll(new RegExp(keyRegPattern, "gi"), (match)=>{
+                                return `<span class="highlight-text"><em>${match}</em></span>`
+                            })
+                            let newObj = {"address":[this.state.version, {name:book.name, id:b_id}, c_id, v_id], "text":newText}
+                            this.searchResult.push(newObj)
+                        }
+                    })
+                })
+            })
+        }
+    }
     render(){
         let BooksSelector
         let ChaptersSelector
@@ -93,10 +159,10 @@ export default class BiblePan extends React.Component{
         let books = null
         let chapters = null
         let verses = null
-        let ChapterView = null
+        let VersesView = null
+
         
-        if(typeof this.state.version.value != "undefined" && this.state.hasLoadedBible){
-            // const BIBLE = Object.values(this.getBible(this.state.version.value))[0]
+        if(typeof this.state.version.name != "undefined" && this.state.hasLoadedBible){
             books = this.state.bibleFile.map((book, id)=>{
                 return book
             })
@@ -114,7 +180,7 @@ export default class BiblePan extends React.Component{
             try{
                 verses = chapters.map((verse, id)=>{return verse})
                 VersesSelector = <SelectItem value={this.state.verse} handleSelectItem = {this.handleSelectVerse} items={verses} placeholder="Select Verse" />
-                ChapterView = chapters[this.state.chapter].map((verse, id)=> {return (<div key={id} className="verse"><small><small><em>verse {id+1}</em></small></small><p>{verse}</p></div>)})
+                VersesView = chapters[this.state.chapter].map((verse, id)=> {return (<div key={id} className="verse"><small><small><em>verse {id+1}</em></small></small><p>{verse}</p></div>)})
 
             }catch(e){
                 // 
@@ -145,48 +211,11 @@ export default class BiblePan extends React.Component{
                         </div>
                     </div>
                 </div>
-                <div className="bible-content">{ChapterView}</div>
+                <div className="bible-content">{VersesView}</div>
+                <div  className="bible-content">
+                    <DangerousResults openBookByAddress={this.openBookByAddress} listsData={this.searchResult} />
+                </div>
             </div>
         )
     }
 }
-
-
-// [
-//     {"en_kjv": EN_KJV},
-//     {"en_bbe": EN_BBE},
-//     {"en_esv": EN_ESV},
-//     {"en_asv": EN_ASV},
-//     {"ng_yoruba": NG_YORUBA},
-//     {"ar_svd": AR_SVD},
-//     {"zh_cuv": ZH_CUV},
-//     {"zh_ncv": ZH_NCV},
-//     {"de_schlachter": DE_SCHLACHTER},
-//     {"el_greek": EL_GREEK},
-//     {"eo_esperanto": EO_ESPERANTO},
-//     {"es_rvr": ES_RVR},
-//     {"fi_finnish": FI_FINNISH},
-//     {"fi_pr": FI_PR},
-//     {"fr_apee": FR_APEE},
-//     {"ko_ko": KO_KO},
-//     {"pt_aa": PT_AA},
-//     {"pt_acf": PT_ACF},
-//     {"pt_nvi": PT_NVI},
-//     {"ro_cornilescu": RO_CORNILESCU},
-//     {"ru_cornilescu": RU_SYNODAL},
-//     {"vi_vietnamese": VI_VIETNAMESE},
-// ]
-
-
-
-// getAllBooksNames(){
-//     let allVersions = []
-//     BibleIndex.forEach(({versions})=>{
-//         versions.forEach((version)=>{
-//             allVersions.push({name:version.name, abbrev:version.abbreviation})
-//         })
-//     })
-//     return allVersions
-// }
-
-// const versions = this.getAllBooksNames().map((i)=>{return i})

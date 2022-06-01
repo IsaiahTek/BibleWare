@@ -22,15 +22,24 @@ export default class ReadBible extends React.Component{
         this.setState({pans:thisPans})
     }
     handleRemovePan(event, panID){
-        // event.preventDefault();
-        
         let thisPans = this.state.pans
         thisPans.splice(thisPans.indexOf(panID), 1)
-        // console.log(oldPan, thisPans)
         this.setState({pans:thisPans})
     }
     generatePanID(){
         return (Math.floor(Math.random()*10000)).toString();
+    }
+    openBookByAddress(bibleObj){
+        // let panID = (Math.floor(Math.random()*10000)).toString()
+        // let versionObj = bibleObj[0]
+        // let bookObj = bibleObj[1]
+        // let chapter = bibleObj[2]
+        // let openPanAddress =  true
+        // let openPanByAddressConstructor = {id:panID, openPanAddress:openPanAddress, address:{versionObj:versionObj, bookObj:bookObj, chapter:chapter}}
+        console.log(bibleObj)
+        // this.setState((state)=>{
+        //     pans:state.pans.push(openPanByAddressConstructor)
+        // })
     }
     render(){
 
@@ -40,10 +49,14 @@ export default class ReadBible extends React.Component{
             </form>
         )
         let Pans = null
-        Pans = this.state.pans.map((key)=>{
-            return(
-                <div className="bible-pan" key={key}>
-                    <BiblePan id={key} handleRemovePan={this.handleRemovePan}/>
+        Pans = this.state.pans.map((pan)=>{
+            if(pan.openPanAddress){
+                return(<div className="bible-pan" key={pan.id}>
+                <BiblePan id={pan.id} bibleAddress={pan.address} handleRemovePan={this.handleRemovePan}/>
+            </div>)
+            }else return(
+                <div className="bible-pan" key={pan}>
+                    <BiblePan id={pan} openBookByAddress={this.openBookByAddress} handleRemovePan={this.handleRemovePan}/>
                 </div>
             )
         })

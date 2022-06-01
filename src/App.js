@@ -29,7 +29,7 @@ class App extends React.Component {
         +".controls-container{background-color:#ff93c5}"
         +".verse{background-color:#f9f9f9}</style>"
         const themeForNight =
-        "<style>body{background-color:rgb(100, 0, 47);color: rgb(255, 0, 98); }"
+        "<style>body{background-color:rgb(100, 0, 47);color: rgb(255, 177, 207); }"
         +".bible-pan{box-shadow: rgb(255, 0, 98) 0px 0px 8px 2px;} </style>"
         return (this.state.dayNightMode)?themeForNight:themeForDay
     }

@@ -23,6 +23,6 @@ export default class SelectBook extends React.Component{
     
     handleSelect(event){
         let bookID = this.props.items.findIndex(({name})=>name === event.target.value)
-        this.props.handleSelect({id:parseInt(bookID), value:event.target.value})
+        this.props.handleSelect({id:parseInt(bookID), name:event.target.value})
     }
 }
